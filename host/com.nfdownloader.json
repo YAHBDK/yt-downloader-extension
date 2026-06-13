@@ -1,0 +1,9 @@
+{
+  "name": "com.nfdownloader",
+  "description": "YouTube Downloader Native Host",
+  "path": "PLACEHOLDER",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://EXTENSION_ID/"
+  ]
+}
