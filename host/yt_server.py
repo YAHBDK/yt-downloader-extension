@@ -9,7 +9,7 @@ BASE = os.path.dirname(os.path.abspath(sys.argv[0]))
 YTDLP = os.path.join(BASE, 'yt-dlp.exe')
 FFMPEG = BASE
 DOWNLOADS = os.path.join(os.path.expanduser('~'), 'Downloads')
-PROXY = 'http://8.8.8.8:80'
+PROXY = None
 
 def already_running():
     try:
@@ -44,12 +44,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 out = os.path.join(DOWNLOADS, '%(title)s.%(ext)s')
 
             if fmt == 'mp3':
-                cmd = [YTDLP, '--proxy', PROXY, '--no-check-certificates',
+                cmd = [YTDLP, '--no-check-certificates',
                        '-x', '--audio-format', 'mp3', '--audio-quality', '0',
                        '--ffmpeg-location', FFMPEG,
                        '-o', out, url]
             else:
-                cmd = [YTDLP, '--proxy', PROXY, '--no-check-certificates',
+                cmd = [YTDLP, '--no-check-certificates',
                        '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                        '--merge-output-format', 'mp4',
                        '--ffmpeg-location', FFMPEG,
