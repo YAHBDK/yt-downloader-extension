@@ -1,6 +1,68 @@
 function getVideoUrl() { return window.location.href; }
 function getTitle() { return document.title.replace(' - YouTube','').replace(/[\\/:*?"<>|]/g,'_').trim(); }
 
+let progressBox = null;
+
+function makeDraggable(el) {
+  let dx = 0, dy = 0, x = 0, y = 0;
+  el.style.cursor = 'move';
+  el.onmousedown = e => {
+    e.preventDefault();
+    x = e.clientX; y = e.clientY;
+    document.onmousemove = e => {
+      dx = e.clientX - x; dy = e.clientY - y;
+      x = e.clientX; y = e.clientY;
+      el.style.left = (el.offsetLeft + dx) + 'px';
+      el.style.top = (el.offsetTop + dy) + 'px';
+      el.style.transform = 'none';
+    };
+    document.onmouseup = () => {
+      document.onmousemove = null;
+      document.onmouseup = null;
+    };
+  };
+}
+
+function showProgress(percent, speed, eta) {
+  if (!progressBox) {
+    progressBox = document.createElement('div');
+    progressBox.id = 'nf-progress-box';
+    Object.assign(progressBox.style, {
+      position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+      background: '#222', color: '#fff', padding: '14px 18px',
+      borderRadius: '12px', zIndex: 99999, fontSize: '13px',
+      fontFamily: 'Arial, sans-serif', direction: 'rtl',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.6)', minWidth: '260px'
+    });
+    progressBox.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-weight:600">⬇ מוריד...</span>
+        <span id="nf-drag-hint" style="font-size:11px;color:#888;cursor:move">✥ גרור</span>
+      </div>
+      <div style="background:#444;border-radius:6px;height:8px;overflow:hidden;margin-bottom:6px">
+        <div id="nf-bar" style="height:100%;background:#1a7a1a;width:0%;transition:width 0.3s"></div>
+      </div>
+      <div id="nf-info" style="font-size:12px;color:#aaa"></div>
+    `;
+    makeDraggable(progressBox);
+    document.body.appendChild(progressBox);
+  }
+  const bar = document.getElementById('nf-bar');
+  const info = document.getElementById('nf-info');
+  if (bar) bar.style.width = percent + '%';
+  if (info) info.textContent = `${percent.toFixed(1)}%  •  ${speed}  •  נותר: ${eta}`;
+}
+
+function hideProgress(success) {
+  if (progressBox) {
+    progressBox.remove();
+    progressBox = null;
+  }
+  if (success) {
+    showNotification('✓ ההורדה הסתיימה — בתיקיית Downloads', '#1a7a1a');
+  }
+}
+
 function showNotification(msg, color) {
   document.querySelectorAll('.nf-notif').forEach(n => n.remove());
   const n = document.createElement('div');
@@ -17,6 +79,27 @@ function showNotification(msg, color) {
   setTimeout(() => n.remove(), 5000);
 }
 
+function pollProgress(job_id) {
+  const interval = setInterval(async () => {
+    try {
+      const res = await fetch(`http://127.0.0.1:9797/progress?id=${job_id}`);
+      const data = await res.json();
+      if (data.error) {
+        clearInterval(interval);
+        hideProgress(false);
+        showNotification('שגיאה: ' + data.error, '#cc0000');
+      } else if (data.done) {
+        clearInterval(interval);
+        hideProgress(true);
+      } else if (data.percent > 0) {
+        showProgress(data.percent, data.speed, data.eta);
+      }
+    } catch (e) {
+      clearInterval(interval);
+    }
+  }, 1000);
+}
+
 function createBtn(label, color, format) {
   const btn = document.createElement('button');
   btn.textContent = label;
@@ -30,7 +113,6 @@ function createBtn(label, color, format) {
     btn.disabled = true;
     btn.style.opacity = '0.5';
     btn.textContent = '⏳...';
-    showNotification('מוריד... זה יכול לקחת כמה שניות', '#555');
 
     const res = await new Promise(resolve =>
       chrome.runtime.sendMessage({
@@ -46,7 +128,8 @@ function createBtn(label, color, format) {
     btn.textContent = orig;
 
     if (res?.ok) {
-      showNotification('✓ ההורדה הושלמה — בתיקיית Downloads', '#1a7a1a');
+      showNotification('ההורדה החלה...', '#555');
+      pollProgress(res.job_id);
     } else {
       const msg = res?.error || '';
       if (msg.includes('host') || msg.includes('connect') || msg.includes('native')) {
