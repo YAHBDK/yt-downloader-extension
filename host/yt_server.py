@@ -10,7 +10,8 @@ YTDLP = os.path.join(BASE, 'yt-dlp.exe')
 FFMPEG = BASE
 DOWNLOADS = os.path.join(os.path.expanduser('~'), 'Downloads')
 
-jobs = {}  # job_id -> {percent, speed, eta, done, error}
+jobs = {}   # job_id -> {percent, speed, eta, done, error}
+procs = {}  # job_id -> subprocess
 
 def already_running():
     try:
@@ -21,7 +22,7 @@ def already_running():
     except:
         return True
 
-def run_download(job_id, url, fmt):
+def run_download(job_id, url, fmt, quality='best'):
     is_playlist = 'list=' in url and 'watch?v=' not in url
     if is_playlist:
         out = os.path.join(DOWNLOADS, '%(playlist_title)s', '%(playlist_index)s - %(title)s.%(ext)s')
@@ -34,8 +35,12 @@ def run_download(job_id, url, fmt):
                '--ffmpeg-location', FFMPEG,
                '-o', out, url]
     else:
+        if quality == 'best':
+            fmt_str = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+        else:
+            fmt_str = f'bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}]/best'
         cmd = [YTDLP, '--no-check-certificates', '--newline',
-               '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+               '-f', fmt_str,
                '--merge-output-format', 'mp4',
                '--ffmpeg-location', FFMPEG,
                '-o', out, url]
@@ -46,6 +51,7 @@ def run_download(job_id, url, fmt):
     try:
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 text=True, creationflags=0x08000000)
+        procs[job_id] = proc
         for line in proc.stdout:
             m = re.search(r'\[download\]\s+([\d.]+)%.*?at\s+([\d.]+\w+/s).*?ETA\s+(\S+)', line)
             if m:
@@ -80,6 +86,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
             job = jobs.get(job_id, {})
             self.send_cors()
             self.wfile.write(json.dumps(job).encode())
+        elif self.path.startswith('/stop'):
+            job_id = self.path.split('?id=')[-1]
+            proc = procs.get(job_id)
+            if proc:
+                proc.terminate()
+                jobs[job_id]['error'] = 'בוטל'
+            self.send_cors()
+            self.wfile.write(json.dumps({'ok': True}).encode())
         else:
             self.send_cors(404)
             self.wfile.write(b'{}')
@@ -90,9 +104,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length))
             url = body.get('url', '')
             fmt = body.get('format', 'mp4')
+            quality = body.get('quality', 'best')
             job_id = str(uuid.uuid4())
             jobs[job_id] = {'percent': 0, 'speed': '', 'eta': '', 'done': False, 'error': None}
-            threading.Thread(target=run_download, args=(job_id, url, fmt), daemon=True).start()
+            threading.Thread(target=run_download, args=(job_id, url, fmt, quality), daemon=True).start()
             self.send_cors()
             self.wfile.write(json.dumps({'ok': True, 'job_id': job_id}).encode())
         except Exception as e:

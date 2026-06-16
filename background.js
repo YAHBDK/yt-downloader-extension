@@ -6,7 +6,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   fetch(SERVER, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: msg.url, format: msg.format }),
+    body: JSON.stringify({ url: msg.url, format: msg.format, quality: msg.quality }),
   })
     .then(r => r.json())
     .then(data => sendResponse(data))
