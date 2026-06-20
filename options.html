@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="utf-8">
+<title>הגדרות — YouTube Downloader</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 24px; max-width: 500px; background: #111; color: #eee; }
+  h2 { margin-bottom: 16px; }
+  .site-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #222; border-radius: 8px; margin-bottom: 8px; }
+  .site-row span { font-size: 14px; }
+  .del-btn { background: #cc0000; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px; }
+  .add-row { display: flex; gap: 8px; margin-top: 16px; }
+  input { flex: 1; padding: 8px 12px; border-radius: 8px; border: none; background: #333; color: #fff; font-size: 14px; }
+  .add-btn { background: #1a7a1a; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 14px; }
+  .saved { color: #1a7a1a; font-size: 13px; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+<h2>אתרים מורשים להורדה</h2>
+<p style="font-size:13px;color:#aaa">ברירת מחדל: יוטיוב בלבד. ניתן להוסיף אתרים נוספים שנתמכים על ידי yt-dlp.</p>
+<div id="sites-list"></div>
+<div class="add-row">
+  <input id="new-site" type="text" placeholder="לדוגמה: vimeo.com">
+  <button id="add-btn" class="add-btn">הוסף</button>
+</div>
+<div class="saved" id="saved-msg">✓ נשמר</div>
+<script src="options.js"></script>
+</body>
+</html>
