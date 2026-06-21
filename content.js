@@ -271,11 +271,18 @@ function initExtension(allowed) {
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       document.getElementById('nf-dl-wrap')?.remove();
-      if (isYoutube) setTimeout(addButtons, 2000);
+      if (isYoutube) setTimeout(tryAddButtons, 500);
     }
   }).observe(document.body, { childList: true, subtree: true });
   if (isYoutube) {
-    setTimeout(addButtons, 2000);
+    function tryAddButtons() {
+      if (document.getElementById('nf-dl-wrap')) return;
+      addButtons();
+    }
+    // נסה מיד ואחר כך המתן לאלמנט
+    tryAddButtons();
+    new MutationObserver(() => tryAddButtons())
+      .observe(document.body, { childList: true, subtree: true });
   } else {
     setTimeout(addFloatingBtn, 1000);
   }
