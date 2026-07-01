@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Downloader",
-  "version": "9.2",
+  "version": "9.5",
   "description": "הורד סרטונים ישירות בלחיצה",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsnGm4ZOBARUJVyirq51lVq1OG+4s5ZS7qaVaWfh57kCk/9yMFD0bxCyPXDUlysVnqOCD9h2tuWzJBFcS0PBkAtXQEnktISu9l7Vzi9Em8Nr5YxesWri954FyLeCCs6/G7LKeuTFwwbl6ekZ3aFcH1IGpgZG72qgzAGHaWHVDHLGWODR+MRtFNR3JDgKm3CXSTT8ozczhDKg/2QlJXr3aFWnvlW1AlOddaoDCGvlt5jFVZ+cPQrh6GjOQE8YiKRiwo3vxKYwPd6kYbccn7qr1pGAl7UpwXS4fXRwfqtIhMhi6b530tMh0thMDvtvbdpyDVORzcvZsudnhixu/HAH5uwIDAQAB",
   "permissions": ["downloads", "storage", "notifications"],

@@ -1,4 +1,10 @@
-function getVideoUrl() { return window.location.href; }
+function getVideoUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('list');
+  url.searchParams.delete('index');
+  return url.toString();
+}
+function getPlaylistUrl() { return window.location.href; }
 function getTitle() { return document.title.replace(' - YouTube','').replace(/[\\/:*?"<>|]/g,'_').trim(); }
 
 let progressBox = null;
@@ -191,6 +197,18 @@ function createBtn(label, color, format) {
   return wrap;
 }
 
+function createPlaylistBtn() {
+  const btn = document.createElement('button');
+  btn.textContent = '📋 הורד פלייליסט';
+  Object.assign(btn.style, {
+    background: '#e65100', color: '#fff', border: 'none', borderRadius: '20px',
+    padding: '7px 16px', cursor: 'pointer', fontSize: '13px', marginLeft: '6px',
+    fontWeight: '600', fontFamily: 'inherit', boxShadow: '0 1px 4px rgba(0,0,0,0.3)'
+  });
+  btn.onclick = () => startDownload(getPlaylistUrl(), 'mp4', 'best');
+  return btn;
+}
+
 function addButtons() {
   if (document.getElementById('nf-dl-wrap')) return;
   const bar = document.querySelector('#actions-inner #menu');
@@ -202,6 +220,9 @@ function addButtons() {
   wrap.appendChild(createBtn('🎬 MP4 הורד', '#cc0000', 'mp4'));
   wrap.appendChild(createBtn('🎵 MP3 הורד', '#1a73e8', 'mp3'));
   wrap.appendChild(createBtn('📱 3GP הורד', '#6a0dad', '3gp'));
+  if (new URLSearchParams(location.search).get('list')) {
+    wrap.appendChild(createPlaylistBtn());
+  }
   bar.prepend(wrap);
 }
 
